@@ -22,7 +22,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 31-Mar-2017 09:03:37
+% Last Modified by GUIDE v2.5 31-Mar-2017 11:01:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -82,28 +82,28 @@ function checkbox1_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of checkbox1
 
 
-% --- Executes on button press in radiobutton2.
-function radiobutton2_Callback(hObject, eventdata, handles)
-% hObject    handle to radiobutton2 (see GCBO)
+% --- Executes on button press in m3UnitButton.
+function m3UnitButton_Callback(hObject, eventdata, handles)
+% hObject    handle to m3UnitButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of radiobutton2
+% Hint: get(hObject,'Value') returns toggle state of m3UnitButton
 
 
-% --- Executes on selection change in listbox1.
-function listbox1_Callback(hObject, eventdata, handles)
-% hObject    handle to listbox1 (see GCBO)
+% --- Executes on selection change in dataList.
+function dataList_Callback(hObject, eventdata, handles)
+% hObject    handle to dataList (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from listbox1
+% Hints: contents = cellstr(get(hObject,'String')) returns dataList contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from dataList
 
 
 % --- Executes during object creation, after setting all properties.
-function listbox1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to listbox1 (see GCBO)
+function dataList_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to dataList (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -115,18 +115,18 @@ end
 
 
 
-function edit2_Callback(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function maxLevelEditBox_Callback(hObject, eventdata, handles)
+% hObject    handle to maxLevelEditBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit2 as text
-%        str2double(get(hObject,'String')) returns contents of edit2 as a double
+% Hints: get(hObject,'String') returns contents of maxLevelEditBox as text
+%        str2double(get(hObject,'String')) returns contents of maxLevelEditBox as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit2_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit2 (see GCBO)
+function maxLevelEditBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to maxLevelEditBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -138,18 +138,18 @@ end
 
 
 
-function edit3_Callback(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function minLevelEditBox_Callback(hObject, eventdata, handles)
+% hObject    handle to minLevelEditBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit3 as text
-%        str2double(get(hObject,'String')) returns contents of edit3 as a double
+% Hints: get(hObject,'String') returns contents of minLevelEditBox as text
+%        str2double(get(hObject,'String')) returns contents of minLevelEditBox as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit3_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit3 (see GCBO)
+function minLevelEditBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to minLevelEditBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -161,18 +161,18 @@ end
 
 
 
-function edit1_Callback(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function timeEditBox_Callback(hObject, eventdata, handles)
+% hObject    handle to timeEditBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of edit1 as text
-%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+% Hints: get(hObject,'String') returns contents of timeEditBox as text
+%        str2double(get(hObject,'String')) returns contents of timeEditBox as a double
 
 
 % --- Executes during object creation, after setting all properties.
-function edit1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to edit1 (see GCBO)
+function timeEditBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to timeEditBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -183,8 +183,42 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on button press in pushbutton1.
-function pushbutton1_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton1 (see GCBO)
+% --- Executes on button press in timeClearButton.
+function timeClearButton_Callback(hObject, eventdata, handles)
+% hObject    handle to timeClearButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in galUnitButton.
+function galUnitButton_Callback(hObject, eventdata, handles)
+% hObject    handle to galUnitButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of galUnitButton
+
+
+% --- Executes on button press in includeLevelCheckbox.
+function includeLevelCheckbox_Callback(hObject, eventdata, handles)
+% hObject    handle to includeLevelCheckbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of includeLevelCheckbox
+
+
+% --- Executes on button press in includeRateCheckbox.
+function includeRateCheckbox_Callback(hObject, eventdata, handles)
+% hObject    handle to includeRateCheckbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of includeRateCheckbox
+
+
+% --- Executes on button press in rangeClearButton.
+function rangeClearButton_Callback(hObject, eventdata, handles)
+% hObject    handle to rangeClearButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
