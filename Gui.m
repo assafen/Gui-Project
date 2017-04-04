@@ -1,4 +1,6 @@
 function varargout = Gui(varargin)
+clear global; %clears all the previous global variables
+
 % GUI MATLAB code for Gui.fig
 %      GUI, by itself, creates a new GUI or raises the existing
 %      singleton*.
@@ -22,7 +24,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 31-Mar-2017 11:01:10
+% Last Modified by GUIDE v2.5 03-Apr-2017 18:19:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -42,7 +44,6 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
 
 % --- Executes just before Gui is made visible.
 function Gui_OpeningFcn(hObject, eventdata, handles, varargin)
@@ -73,13 +74,45 @@ function varargout = Gui_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in checkbox1.
-function checkbox1_Callback(hObject, eventdata, handles)
-% hObject    handle to checkbox1 (see GCBO)
+
+% --- Executes during object creation, after setting all properties.
+function dataList_CreateFcn(hObject, eventdata, handles)
+  %
+ %This is a cell array of the file names in DataFold
+
+dataSelection = dir(['DataFolder','\*.mat']); %gets info about the content in DataFolder
+handles.NAMES = {dataSelection.name}; %gets only the file names in DataFolder
+set(hObject,'String',handles.NAMES) %sets the list box to display those file names
+
+listChoice = get(hObject,'Value'); %gets the selected choice (default is 1)
+dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
+handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the 
+%name of the file that contains the water usage data. Use as - load(handles.FULLDATAFILENAME)
+
+guidata(hObject,handles) %saves the handles of NAMES and FULLDATAFILENAME
+
+%     --- Executes on selection change in dataList.
+function dataList_Callback(hObject, eventdata, handles)
+ %global variables from dataList_CreateFcn
+
+listChoice = get(hObject,'Value'); %gets the selected choice
+dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
+handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the 
+%   name of the file that contains the water usage data. Use as 
+%   load(handles.FULLDATAFILENAME)
+
+fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
+
+guidata(hObject,handles) %saves the handles of FULLDATAFILENAME
+
+
+% --- Executes on button press in galUnitButton.
+function galUnitButton_Callback(hObject, eventdata, handles)
+% hObject    handle to galUnitButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of checkbox1
+% Hint: get(hObject,'Value') returns toggle state of galUnitButton
 
 
 % --- Executes on button press in m3UnitButton.
@@ -91,29 +124,6 @@ function m3UnitButton_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of m3UnitButton
 
 
-% --- Executes on selection change in dataList.
-function dataList_Callback(hObject, eventdata, handles)
-% hObject    handle to dataList (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: contents = cellstr(get(hObject,'String')) returns dataList contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from dataList
-
-
-% --- Executes during object creation, after setting all properties.
-function dataList_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to dataList (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: listbox controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
-
 
 function maxLevelEditBox_Callback(hObject, eventdata, handles)
 % hObject    handle to maxLevelEditBox (see GCBO)
@@ -122,7 +132,7 @@ function maxLevelEditBox_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of maxLevelEditBox as text
 %        str2double(get(hObject,'String')) returns contents of maxLevelEditBox as a double
-
+fprintf('%f',str2num(get(hObject,'String')))
 
 % --- Executes during object creation, after setting all properties.
 function maxLevelEditBox_CreateFcn(hObject, eventdata, handles)
@@ -159,6 +169,11 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
     set(hObject,'BackgroundColor','white');
 end
 
+% --- Executes on button press in rangeClearButton.
+function rangeClearButton_Callback(hObject, eventdata, handles)
+% hObject    handle to rangeClearButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 
 
 function timeEditBox_Callback(hObject, eventdata, handles)
@@ -190,15 +205,6 @@ function timeClearButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% --- Executes on button press in galUnitButton.
-function galUnitButton_Callback(hObject, eventdata, handles)
-% hObject    handle to galUnitButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of galUnitButton
-
-
 % --- Executes on button press in includeLevelCheckbox.
 function includeLevelCheckbox_Callback(hObject, eventdata, handles)
 % hObject    handle to includeLevelCheckbox (see GCBO)
@@ -215,10 +221,3 @@ function includeRateCheckbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of includeRateCheckbox
-
-
-% --- Executes on button press in rangeClearButton.
-function rangeClearButton_Callback(hObject, eventdata, handles)
-% hObject    handle to rangeClearButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
