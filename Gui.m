@@ -1,6 +1,4 @@
 function varargout = Gui(varargin)
-clear global; %clears all the previous global variables
-
 % GUI MATLAB code for Gui.fig
 %      GUI, by itself, creates a new GUI or raises the existing
 %      singleton*.
@@ -53,14 +51,19 @@ function Gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % handles    structure with handles and user data (see GUIDATA)
 % varargin   command line arguments to Gui (see VARARGIN)
 
+% UIWAIT makes Gui wait for user response (see UIRESUME)
+% uiwait(handles.figure1);
+
 % Choose default command line output for Gui
 handles.output = hObject;
 
 % Update handles structure
 guidata(hObject, handles);
 
-% UIWAIT makes Gui wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
+%calls the graph funtion
+graph(handles)
+
+
 
 
 % --- Outputs from this function are returned to the command line.
@@ -77,8 +80,6 @@ varargout{1} = handles.output;
 
 % --- Executes during object creation, after setting all properties.
 function dataList_CreateFcn(hObject, eventdata, handles)
-  %
- %This is a cell array of the file names in DataFold
 
 dataSelection = dir(['DataFolder','\*.mat']); %gets info about the content in DataFolder
 handles.NAMES = {dataSelection.name}; %gets only the file names in DataFolder
@@ -91,9 +92,9 @@ handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the
 
 guidata(hObject,handles) %saves the handles of NAMES and FULLDATAFILENAME
 
+
 %     --- Executes on selection change in dataList.
 function dataList_Callback(hObject, eventdata, handles)
- %global variables from dataList_CreateFcn
 
 listChoice = get(hObject,'Value'); %gets the selected choice
 dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
@@ -104,6 +105,15 @@ handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the
 fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
 
 guidata(hObject,handles) %saves the handles of FULLDATAFILENAME
+graph(handles) %calls the graph function to update graph
+
+
+%This function updates the graph
+function graph(handles)
+axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
+load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
+
+plot(time,water_usage) %This is just a test plot
 
 
 % --- Executes on button press in galUnitButton.
@@ -122,7 +132,6 @@ function m3UnitButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of m3UnitButton
-
 
 
 function maxLevelEditBox_Callback(hObject, eventdata, handles)
