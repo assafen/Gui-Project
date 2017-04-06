@@ -60,10 +60,9 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-%calls the graph funtion
-graph(handles)
-
-
+%Added Code
+graph(handles) %calls the graph funtion
+rangeClearButton_Callback(hObject, eventdata, handles) %clears the range
 
 
 % --- Outputs from this function are returned to the command line.
@@ -77,10 +76,21 @@ function varargout = Gui_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
+%     --- Executes on selection change in dataList.
+function dataList_Callback(hObject, eventdata, handles)
+listChoice = get(hObject,'Value'); %gets the selected choice
+dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
+handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the 
+%   name of the file that contains the water usage data. Use as 
+%   load(handles.FULLDATAFILENAME)
+
+fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
+
+guidata(hObject,handles) %saves the handles of FULLDATAFILENAME
+graph(handles) %calls the graph function to update graph
 
 % --- Executes during object creation, after setting all properties.
 function dataList_CreateFcn(hObject, eventdata, handles)
-
 dataSelection = dir(['DataFolder','\*.mat']); %gets info about the content in DataFolder
 handles.NAMES = {dataSelection.name}; %gets only the file names in DataFolder
 set(hObject,'String',handles.NAMES) %sets the list box to display those file names
@@ -93,96 +103,40 @@ handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the
 guidata(hObject,handles) %saves the handles of NAMES and FULLDATAFILENAME
 
 
-%     --- Executes on selection change in dataList.
-function dataList_Callback(hObject, eventdata, handles)
-
-listChoice = get(hObject,'Value'); %gets the selected choice
-dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
-handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the 
-%   name of the file that contains the water usage data. Use as 
-%   load(handles.FULLDATAFILENAME)
-
-fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
-
-guidata(hObject,handles) %saves the handles of FULLDATAFILENAME
-graph(handles) %calls the graph function to update graph
-
-
-%This function updates the graph
-function graph(handles)
-axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
-load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
-
-plot(time,water_usage) %This is just a test plot
-
-
-% --- Executes on button press in galUnitButton.
-function galUnitButton_Callback(hObject, eventdata, handles)
-% hObject    handle to galUnitButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of galUnitButton
-
-
-% --- Executes on button press in m3UnitButton.
-function m3UnitButton_Callback(hObject, eventdata, handles)
-% hObject    handle to m3UnitButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of m3UnitButton
-
-
 function maxLevelEditBox_Callback(hObject, eventdata, handles)
-% hObject    handle to maxLevelEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of maxLevelEditBox as text
-%        str2double(get(hObject,'String')) returns contents of maxLevelEditBox as a double
-fprintf('%f',str2num(get(hObject,'String')))
+handles.maxLevel = str2double(get(hObject,'String')); %this variable contains user input for max level
+if(isnan(handles.maxLevel)) %ensures that input is a number
+    fprintf('Please input a number\n')
+else
+    fprintf('Max Level changed to %f\n',handles.maxLevel) %prints the change 
+    guidata(hObject,handles) %updates the handles only if input is valid
+end
 
 % --- Executes during object creation, after setting all properties.
 function maxLevelEditBox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to maxLevelEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 
 function minLevelEditBox_Callback(hObject, eventdata, handles)
-% hObject    handle to minLevelEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of minLevelEditBox as text
-%        str2double(get(hObject,'String')) returns contents of minLevelEditBox as a double
-
+handles.minLevel = str2double(get(hObject,'String')); %this variable stores user imput for min level
+if(isnan(handles.minLevel)) %ensures that input is a number
+    fprintf('Please input a number\n')
+else
+    fprintf('Min Level changed to %f\n',handles.minLevel) %prints the change 
+    guidata(hObject,handles) %updates the handles only if input is valid
+end
 
 % --- Executes during object creation, after setting all properties.
 function minLevelEditBox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to minLevelEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
 
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
 
 % --- Executes on button press in rangeClearButton.
 function rangeClearButton_Callback(hObject, eventdata, handles)
-% hObject    handle to rangeClearButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+handles.minLevel = 0; %sets both variables to 0
+handles.maxLevel = 0;
+set(handles.minLevelEditBox,'String','') %sets both edit boxes to blank
+set(handles.maxLevelEditBox,'String','')
+guidata(hObject,handles) %updates the handles
+fprintf('Range Edit Boxes Cleared\n') %prints that the ranges were cleared
 
 
 function timeEditBox_Callback(hObject, eventdata, handles)
@@ -212,6 +166,32 @@ function timeClearButton_Callback(hObject, eventdata, handles)
 % hObject    handle to timeClearButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+%This function updates the graph
+function graph(handles)
+axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
+load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
+
+plot(time,water_usage) %This is just a test plot
+
+
+% --- Executes on button press in galUnitButton.
+function galUnitButton_Callback(hObject, eventdata, handles)
+% hObject    handle to galUnitButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of galUnitButton
+
+
+% --- Executes on button press in m3UnitButton.
+function m3UnitButton_Callback(hObject, eventdata, handles)
+% hObject    handle to m3UnitButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of m3UnitButton
 
 
 % --- Executes on button press in includeLevelCheckbox.
