@@ -61,7 +61,7 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 %Added Code
-graph(handles) %calls the graph funtion
+graph(hObject, handles) %calls the graph funtion
 rangeClearButton_Callback(hObject, eventdata, handles) %clears the range
 
 
@@ -87,7 +87,7 @@ handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the
 fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
 
 guidata(hObject,handles) %saves the handles of FULLDATAFILENAME
-graph(handles) %calls the graph function to update graph
+graph(hObject, handles) %calls the graph function to update graph
 
 % --- Executes during object creation, after setting all properties.
 function dataList_CreateFcn(hObject, eventdata, handles)
@@ -100,7 +100,7 @@ dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the sel
 handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the 
 %name of the file that contains the water usage data. Use as - load(handles.FULLDATAFILENAME)
 
-guidata(hObject,handles) %saves the handles of NAMES and FULLDATAFILENAME
+guidata(hObject,handles) %saves all the handles
 
 
 function maxLevelEditBox_Callback(hObject, eventdata, handles)
@@ -140,36 +140,28 @@ fprintf('Range Edit Boxes Cleared\n') %prints that the ranges were cleared
 
 
 function timeEditBox_Callback(hObject, eventdata, handles)
-% hObject    handle to timeEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+sTime = str2double(get(hObject,'String')); %gets the value stored in the box
+sTimeIndex = find(handles.time == sTime); %finds the index of where the specific time is
+sLevel = handles.waterLevel(sTimeIndex); %the water level at the specific time
+sRate = handles.waterRate(sTimeIndex); %the rate at the specific time
 
-% Hints: get(hObject,'String') returns contents of timeEditBox as text
-%        str2double(get(hObject,'String')) returns contents of timeEditBox as a double
+set(handles.timeLevel,'String',sLevel) %sets both output texts to the right values
+set(handles.timeRate,'String',sRate)
 
 
 % --- Executes during object creation, after setting all properties.
 function timeEditBox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to timeEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
+timeClearButton_Callback(hObject, eventdata, handles) %calls the clear function
 
 
 % --- Executes on button press in timeClearButton.
 function timeClearButton_Callback(hObject, eventdata, handles)
-% hObject    handle to timeClearButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
+set(handles.timeLevel,'String','') %clears the specific time display 
+set(handles.timeRate,'String','')
+set(handles.timeEditBox,'String','')
 
 %This function updates the graph
-function graph(handles)
+function graph(hObject, handles)
 axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
 load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
 rtank=5;%the dimension of the tank
@@ -196,6 +188,13 @@ end
 %plot(time,water_usage)
 %if includeRateCheckbox(is checked)&&galUnitButton(is checked)
 % plot(time,water_usage*.0038)
+
+handles.waterLevel = wl; %this is the vector of the water level
+handles.waterRate = water_usage; %this is the vector of the water usage
+handles.time = time; %this is the vector of the times
+
+guidata(hObject,handles) %updates the handles
+fprintf('test\n')
 
 
 % --- Executes on button press in galUnitButton.
