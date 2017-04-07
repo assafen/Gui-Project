@@ -172,8 +172,30 @@ function timeClearButton_Callback(hObject, eventdata, handles)
 function graph(handles)
 axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
 load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
-
-plot(time,water_usage) %This is just a test plot
+rtank=5;%the dimension of the tank
+htank=20;
+wl(1)=10;%the initial water level
+vm3(1)=rtank^2*pi*wl(1);% inital volumes in cubic meters 
+vgal(1)=vm3(1)/.0038; % initial volume in gallons 
+%sill need to add in the min and max lewvel 
+for k=2:1:length(time)
+    dt=(time(k)-time(k-1));
+    vgal(k)=vgal(k-1)-water_usage(k)*dt; %finds the next volume in gallons
+    vm3(k)=vgal(k)*.0038; % converts to volume cubic meters
+    wl(k)=vm3(k)/(rtank^2*pi);% finds the nex twater level
+    if wl>20
+        error('water level exceeds the constraints the tank')
+    elseif wl<0
+        error('the water tank is empty')
+    end
+end
+ %need to put in a get from the check baxes for an if sructer   
+ % if includelevelCheckbox(is checked)
+   plot(time,wl)
+ %if includeRateCheckbox(is checked)&&galUnitButton(is checked)
+%plot(time,water_usage)
+%if includeRateCheckbox(is checked)&&galUnitButton(is checked)
+% plot(time,water_usage*.0038)
 
 
 % --- Executes on button press in galUnitButton.
