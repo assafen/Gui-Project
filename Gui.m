@@ -110,6 +110,7 @@ if(isnan(handles.maxLevel)) %ensures that input is a number
 else
     fprintf('Max Level changed to %f\n',handles.maxLevel) %prints the change 
     guidata(hObject,handles) %updates the handles only if input is valid
+    graph(handles)%supposed ot update the graph
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -123,6 +124,7 @@ if(isnan(handles.minLevel)) %ensures that input is a number
 else
     fprintf('Min Level changed to %f\n',handles.minLevel) %prints the change 
     guidata(hObject,handles) %updates the handles only if input is valid
+    graph(handles)%supposed to update graph
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -136,6 +138,7 @@ handles.maxLevel = 0;
 set(handles.minLevelEditBox,'String','') %sets both edit boxes to blank
 set(handles.maxLevelEditBox,'String','')
 guidata(hObject,handles) %updates the handles
+graph(handles)%updates graph maybe
 fprintf('Range Edit Boxes Cleared\n') %prints that the ranges were cleared
 
 
@@ -161,7 +164,12 @@ set(handles.timeRate,'String','')
 set(handles.timeEditBox,'String','')
 
 %This function updates the graph
+<<<<<<< HEAD
 function graph(hObject, handles)
+=======
+function graph(handles)
+hold off;
+>>>>>>> refs/remotes/origin/master
 axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
 load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
 rtank=5;%the dimension of the tank
@@ -169,25 +177,59 @@ htank=20;
 wl(1)=10;%i set the initial water level for ten because there wasnt anything saying what it would start at 
 vm3(1)=rtank^2*pi*wl(1);% inital volumes in cubic meters 
 vgal(1)=vm3(1)/.0038; % initial volume in gallons 
+dt=1;
+pump(1)=0;
+wlmin=str2num(get(handles.minLevelEditBox,'String'));
+wlmax=str2num(get(handles.maxLevelEditBox,'String'));
+flowin=1000;
 %sill need to add in the min and max lewvel 
 for k=2:1:length(time)
-    dt=(time(k)-time(k-1));
-    vgal(k)=vgal(k-1)-water_usage(k)*dt; %finds the next volume in gallons
-    vm3(k)=vgal(k)*.0038; % converts to volume cubic meters
-    wl(k)=vm3(k)/(rtank^2*pi);% finds the nex twater level
+    pump(k)=pump(k-1);
+    
+    if pump(k)==0
+    vgal(k)=vgal(k-1)-water_usage(k)*dt;%next volume in gallons if the pump is off
+    else
+        vgal(k)=vgal(k-1)+(flowin-water_usage(k))*dt;%next volume in gallons if the pump is on
+    end
+    vm3(k)=vgal(k)*.0038;%converts volume to cubic meters
+    wl(k)=vm3(k)/(rtank^2*pi);%finds water level using the cubic meter volume
+    if wl(k)<wlmin&&pump(k)==0%pump controls 
+        pump(k)=1;
+        fprintf('The punp has been turned ON at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
+    elseif wl(k)>wlmax&&pump(k)==1
+        pump(k)=0;
+        fprintf('The punp has been turned OFF at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
+    end
     if wl>20
         error('water level exceeds the constraints the tank')
     elseif wl<0
         error('the water tank is empty')
     end
 end
- %need to put in a get from the check baxes for an if sructer   
- % if includelevelCheckbox(is checked)
-   plot(time,wl)
- %if includeRateCheckbox(is checked)&&galUnitButton(is checked)
-%plot(time,water_usage)
-%if includeRateCheckbox(is checked)&&galUnitButton(is checked)
-% plot(time,water_usage*.0038)
+
+wlminp(1)=wlmin;
+wlmaxp(1)=wlmax;
+for k=2:1:length(time)
+    wlminp(k)=wlmin;
+    wlmaxp(k)=wlmax;
+end
+plot(time,wlminp,'--')%puts min and max lines on the graph
+hold on
+plot(time,wlmaxp,'--')
+ %need to put in a get from the check baxes for an if sructer
+ LevelCheckBox=get(handles.includeLevelCheckbox,'Value');
+ RateCheckBox=get(handles.includeRateCheckbox,'Value');
+ GalButton=get(handles.galUnitButton,'Value');
+ m3Button=get(handles.m3UnitButton,'Value');
+ if LevelCheckBox==1
+   plot(time,wl)%plots the water level
+ end
+ if (RateCheckBox==1)&&(GalButton==1)
+plot(time,water_usage)%plots rate in gallons per minute
+ elseif (RateCheckBox==1)&&(m3Button==1)
+plot(time,water_usage*.0038)%plots rate in cubic meters per minute 
+ end
+hold off
 
 handles.waterLevel = wl; %this is the vector of the water level
 handles.waterRate = water_usage; %this is the vector of the water usage
@@ -202,7 +244,7 @@ function galUnitButton_Callback(hObject, eventdata, handles)
 % hObject    handle to galUnitButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+graph(handles)
 % Hint: get(hObject,'Value') returns toggle state of galUnitButton
 
 
@@ -211,7 +253,7 @@ function m3UnitButton_Callback(hObject, eventdata, handles)
 % hObject    handle to m3UnitButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+graph(handles)
 % Hint: get(hObject,'Value') returns toggle state of m3UnitButton
 
 
@@ -220,7 +262,7 @@ function includeLevelCheckbox_Callback(hObject, eventdata, handles)
 % hObject    handle to includeLevelCheckbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+graph(handles)
 % Hint: get(hObject,'Value') returns toggle state of includeLevelCheckbox
 
 
@@ -229,5 +271,5 @@ function includeRateCheckbox_Callback(hObject, eventdata, handles)
 % hObject    handle to includeRateCheckbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+graph(handles)
 % Hint: get(hObject,'Value') returns toggle state of includeRateCheckbox
