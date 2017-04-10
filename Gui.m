@@ -22,7 +22,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 03-Apr-2017 18:19:17
+% Last Modified by GUIDE v2.5 09-Apr-2017 20:15:36
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -61,8 +61,8 @@ handles.output = hObject;
 guidata(hObject, handles);
 
 %Added Code
-graph(handles) %calls the graph funtion
-rangeClearButton_Callback(hObject, eventdata, handles) %clears the range
+graph(hObject, handles) %calls the graph funtion
+
 
 
 % --- Outputs from this function are returned to the command line.
@@ -87,7 +87,7 @@ handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the
 fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
 
 guidata(hObject,handles) %saves the handles of FULLDATAFILENAME
-graph(handles) %calls the graph function to update graph
+graph(hObject, handles) %calls the graph function to update graph
 
 % --- Executes during object creation, after setting all properties.
 function dataList_CreateFcn(hObject, eventdata, handles)
@@ -100,107 +100,57 @@ dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the sel
 handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the 
 %name of the file that contains the water usage data. Use as - load(handles.FULLDATAFILENAME)
 
-guidata(hObject,handles) %saves the handles of NAMES and FULLDATAFILENAME
-
-
-function maxLevelEditBox_Callback(hObject, eventdata, handles)
-handles.maxLevel = str2double(get(hObject,'String')); %this variable contains user input for max level
-if(isnan(handles.maxLevel)) %ensures that input is a number
-    fprintf('Please input a number\n')
-else
-    fprintf('Max Level changed to %f\n',handles.maxLevel) %prints the change 
-    guidata(hObject,handles) %updates the handles only if input is valid
-    graph(handles)%supposed ot update the graph
-end
-
-% --- Executes during object creation, after setting all properties.
-function maxLevelEditBox_CreateFcn(hObject, eventdata, handles)
-
-
-function minLevelEditBox_Callback(hObject, eventdata, handles)
-handles.minLevel = str2double(get(hObject,'String')); %this variable stores user imput for min level
-if(isnan(handles.minLevel)) %ensures that input is a number
-    fprintf('Please input a number\n')
-else
-    fprintf('Min Level changed to %f\n',handles.minLevel) %prints the change 
-    guidata(hObject,handles) %updates the handles only if input is valid
-    graph(handles)%supposed to update graph
-end
-
-% --- Executes during object creation, after setting all properties.
-function minLevelEditBox_CreateFcn(hObject, eventdata, handles)
-
-
-% --- Executes on button press in rangeClearButton.
-function rangeClearButton_Callback(hObject, eventdata, handles)
-handles.minLevel = 0; %sets both variables to 0
-handles.maxLevel = 0;
-set(handles.minLevelEditBox,'String','') %sets both edit boxes to blank
-set(handles.maxLevelEditBox,'String','')
-guidata(hObject,handles) %updates the handles
-graph(handles)%updates graph maybe
-fprintf('Range Edit Boxes Cleared\n') %prints that the ranges were cleared
-
+guidata(hObject,handles) %saves all the handles
 
 function timeEditBox_Callback(hObject, eventdata, handles)
-% hObject    handle to timeEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+sTime = str2double(get(hObject,'String')); %gets the value stored in the box
+sTimeIndex = find(handles.time == sTime); %finds the index of where the specific time is
+sLevel = handles.waterLevel(sTimeIndex); %the water level at the specific time
+sRate = handles.waterRate(sTimeIndex); %the rate at the specific time
 
-% Hints: get(hObject,'String') returns contents of timeEditBox as text
-%        str2double(get(hObject,'String')) returns contents of timeEditBox as a double
+set(handles.timeLevel,'String',sLevel) %sets both output texts to the right values
+set(handles.timeRate,'String',sRate)
 
 
 % --- Executes during object creation, after setting all properties.
 function timeEditBox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to timeEditBox (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
-% Hint: edit controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
-
 
 % --- Executes on button press in timeClearButton.
 function timeClearButton_Callback(hObject, eventdata, handles)
-% hObject    handle to timeClearButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
+set(handles.timeLevel,'String','') %clears the specific time display 
+set(handles.timeRate,'String','')
+set(handles.timeEditBox,'String','')
 
 %This function updates the graph
-function graph(handles)
+function graph(hObject, handles)
 hold off;
-axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
+axes(handles.WaterLevel) %points to WaterLevel so the plot knows where to go
 load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
-rtank=5;%the dimension of the tank
-htank=20;
-wl(1)=10;%i set the initial water level for ten because there wasnt anything saying what it would start at 
-vm3(1)=rtank^2*pi*wl(1);% inital volumes in cubic meters 
-vgal(1)=vm3(1)/.0038; % initial volume in gallons 
-dt=1;
-pump(1)=0;
-wlmin=str2num(get(handles.minLevelEditBox,'String'));
-wlmax=str2num(get(handles.maxLevelEditBox,'String'));
-flowin=1000;
+rtank = 5;%the dimension of the tank
+htank = 20;
+wl(1)= 10;%i set the initial water level for ten because there wasnt anything saying what it would start at 
+vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters 
+vgal(1) = vm3(1)/.0038; % initial volume in gallons 
+dt = 1;
+pump(1)= 0;
+wlmin = 2; % Assumed, this might have to be changed
+wlmax = 18;
+flowin = 1000;
 %sill need to add in the min and max lewvel 
 for k=2:1:length(time)
-    pump(k)=pump(k-1);
+    pump(k)= pump(k-1);
     
     if pump(k)==0
-    vgal(k)=vgal(k-1)-water_usage(k)*dt;%next volume in gallons if the pump is off
+        vgal(k)=vgal(k-1)-water_usage(k)*dt; %next volume in gallons if the pump is off
     else
-        vgal(k)=vgal(k-1)+(flowin-water_usage(k))*dt;%next volume in gallons if the pump is on
+        vgal(k)=vgal(k-1)+(flowin-water_usage(k))*dt; %next volume in gallons if the pump is on
     end
-    vm3(k)=vgal(k)*.0038;%converts volume to cubic meters
-    wl(k)=vm3(k)/(rtank^2*pi);%finds water level using the cubic meter volume
-    if wl(k)<wlmin&&pump(k)==0%pump controls 
+    vm3(k)= vgal(k)*.0038; %converts volume to cubic meters
+    wl(k)= vm3(k)/(rtank^2*pi); %finds water level using the cubic meter volume
+    if wl(k) < wlmin && pump(k)== 0 %pump controls 
         pump(k)=1;
         fprintf('The punp has been turned ON at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
-    elseif wl(k)>wlmax&&pump(k)==1
+    elseif wl(k)>wlmax && pump(k)== 1
         pump(k)=0;
         fprintf('The punp has been turned OFF at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
     end
@@ -235,13 +185,20 @@ plot(time,water_usage*.0038)%plots rate in cubic meters per minute
  end
 hold off
 
+handles.waterLevel = wl; %this is the vector of the water level
+handles.waterRate = water_usage; %this is the vector of the water usage
+handles.time = time; %this is the vector of the times
+
+guidata(hObject,handles) %updates the handles
+
+
 
 % --- Executes on button press in galUnitButton.
 function galUnitButton_Callback(hObject, eventdata, handles)
 % hObject    handle to galUnitButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-graph(handles)
+graph(hObject, handles)
 % Hint: get(hObject,'Value') returns toggle state of galUnitButton
 
 
@@ -250,7 +207,7 @@ function m3UnitButton_Callback(hObject, eventdata, handles)
 % hObject    handle to m3UnitButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-graph(handles)
+graph(hObject, handles)
 % Hint: get(hObject,'Value') returns toggle state of m3UnitButton
 
 
@@ -259,7 +216,7 @@ function includeLevelCheckbox_Callback(hObject, eventdata, handles)
 % hObject    handle to includeLevelCheckbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-graph(handles)
+graph(hObject, handles)
 % Hint: get(hObject,'Value') returns toggle state of includeLevelCheckbox
 
 
@@ -268,5 +225,5 @@ function includeRateCheckbox_Callback(hObject, eventdata, handles)
 % hObject    handle to includeRateCheckbox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-graph(handles)
+graph(hObject, handles)
 % Hint: get(hObject,'Value') returns toggle state of includeRateCheckbox
