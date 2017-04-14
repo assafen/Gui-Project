@@ -103,8 +103,13 @@ handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the
 guidata(hObject,handles) %saves all the handles
 
 function timeEditBox_Callback(hObject, eventdata, handles)
+%This rounds the input time to the lowest value in handles.time
 sTime = str2double(get(hObject,'String')); %gets the value stored in the box
-sTimeIndex = find(handles.time == sTime); %finds the index of where the specific time is
+syncTime = (sTime-handles.waterLevel(1)); %This usually wont change sTime
+remainderTime = mod(syncTime,handles.dt); %the remainder time
+normalTime = (syncTime - remainderTime)/handles.dt; %This value will be in handles.time always
+
+sTimeIndex = find(handles.time == normalTime); %finds the index of where the specific time is
 sLevel = handles.waterLevel(sTimeIndex); %the water level at the specific time
 sRate = handles.waterRate(sTimeIndex); %the rate at the specific time
 
@@ -131,7 +136,7 @@ htank = 20;
 wl(1)= 10;%i set the initial water level for ten because there wasnt anything saying what it would start at 
 vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters 
 vgal(1) = vm3(1)/.0038; % initial volume in gallons 
-dt = 1;
+dt = time(2)-time(1);
 pump(1)= 0;
 wlmin = 2; % Assumed, this might have to be changed
 wlmax = 18;
@@ -171,8 +176,7 @@ plot(time,wlminp,'--')%puts min and max lines on the graph
 hold on
 plot(time,wlmaxp,'--')
  %need to put in a get from the check baxes for an if sructer
- LevelCheckBox=get(handles.includeLevelCheckbox,'Value');
- RateCheckBox=get(handles.includeRateCheckbox,'Value');
+
  GalButton=get(handles.galUnitButton,'Value');
  m3Button=get(handles.m3UnitButton,'Value');
  if LevelCheckBox==1
@@ -188,6 +192,7 @@ hold off
 handles.waterLevel = wl; %this is the vector of the water level
 handles.waterRate = water_usage; %this is the vector of the water usage
 handles.time = time; %this is the vector of the times
+handles.dt = dt; %this is the delta t between each data point
 
 guidata(hObject,handles) %updates the handles
 
