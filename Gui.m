@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 function varargout = Gui(varargin)
 % GUI MATLAB code for Gui.fig
 %      GUI, by itself, creates a new GUI or raises the existing
@@ -233,7 +232,7 @@ function includeRateCheckbox_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of includeRateCheckbox
-=======
+
 function varargout = Gui(varargin)
 % GUI MATLAB code for Gui.fig
 %      GUI, by itself, creates a new GUI or raises the existing
@@ -363,7 +362,6 @@ hold off;
 axes(handles.graphOutput) %points to WaterLevel so the plot knows where to go
 load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
 rtank = 5;%the dimension of the tank
-htank = 20;
 wl(1)= 10;%i set the initial water level for ten because there wasnt anything saying what it would start at 
 vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters 
 vgal(1) = vm3(1)/.0038; % initial volume in gallons 
@@ -371,8 +369,7 @@ dt = 1;
 pump(1)= 0;
 wlmin = 2; % Assumed, this might have to be changed
 wlmax = 18;
-flowin = 1000;
-%sill need to add in the min and max lewvel 
+flowin = 1000; 
 for k=2:1:length(time)
     pump(k)= pump(k-1);
     
@@ -468,4 +465,3 @@ function graphMenu_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
->>>>>>> origin/master
