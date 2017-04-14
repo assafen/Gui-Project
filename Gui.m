@@ -22,7 +22,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 09-Apr-2017 20:15:36
+% Last Modified by GUIDE v2.5 14-Apr-2017 08:25:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -124,10 +124,9 @@ set(handles.timeEditBox,'String','')
 %This function updates the graph
 function graph(hObject, handles)
 hold off;
-axes(handles.WaterLevel) %points to WaterLevel so the plot knows where to go
+axes(handles.graphOutput) %points to WaterLevel so the plot knows where to go
 load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
 rtank = 5;%the dimension of the tank
-htank = 20;
 wl(1)= 10;%i set the initial water level for ten because there wasnt anything saying what it would start at 
 vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters 
 vgal(1) = vm3(1)/.0038; % initial volume in gallons 
@@ -135,8 +134,7 @@ dt = 1;
 pump(1)= 0;
 wlmin = 2; % Assumed, this might have to be changed
 wlmax = 18;
-flowin = 1000;
-%sill need to add in the min and max lewvel 
+flowin = 1000; 
 for k=2:1:length(time)
     pump(k)= pump(k-1);
     
@@ -211,19 +209,24 @@ graph(hObject, handles)
 % Hint: get(hObject,'Value') returns toggle state of m3UnitButton
 
 
-% --- Executes on button press in includeLevelCheckbox.
-function includeLevelCheckbox_Callback(hObject, eventdata, handles)
-% hObject    handle to includeLevelCheckbox (see GCBO)
+% --- Executes on selection change in graphMenu.
+function graphMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to graphMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-graph(hObject, handles)
-% Hint: get(hObject,'Value') returns toggle state of includeLevelCheckbox
+
+% Hints: contents = cellstr(get(hObject,'String')) returns graphMenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from graphMenu
 
 
-% --- Executes on button press in includeRateCheckbox.
-function includeRateCheckbox_Callback(hObject, eventdata, handles)
-% hObject    handle to includeRateCheckbox (see GCBO)
+% --- Executes during object creation, after setting all properties.
+function graphMenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to graphMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-graph(hObject, handles)
-% Hint: get(hObject,'Value') returns toggle state of includeRateCheckbox
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
