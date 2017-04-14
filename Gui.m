@@ -22,16 +22,16 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 14-Apr-2017 08:25:10
+% Last Modified by GUIDE v2.5 14-Apr-2017 09:42:58
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
-                   'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @Gui_OpeningFcn, ...
-                   'gui_OutputFcn',  @Gui_OutputFcn, ...
-                   'gui_LayoutFcn',  [] , ...
-                   'gui_Callback',   []);
+    'gui_Singleton',  gui_Singleton, ...
+    'gui_OpeningFcn', @Gui_OpeningFcn, ...
+    'gui_OutputFcn',  @Gui_OutputFcn, ...
+    'gui_LayoutFcn',  [] , ...
+    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
     gui_State.gui_Callback = str2func(varargin{1});
 end
@@ -66,7 +66,7 @@ graph(hObject, handles) %calls the graph funtion
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = Gui_OutputFcn(hObject, eventdata, handles) 
+function varargout = Gui_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -80,8 +80,8 @@ varargout{1} = handles.output;
 function dataList_Callback(hObject, eventdata, handles)
 listChoice = get(hObject,'Value'); %gets the selected choice
 dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
-handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the 
-%   name of the file that contains the water usage data. Use as 
+handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the
+%   name of the file that contains the water usage data. Use as
 %   load(handles.FULLDATAFILENAME)
 
 fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
@@ -97,19 +97,14 @@ set(hObject,'String',handles.NAMES) %sets the list box to display those file nam
 
 listChoice = get(hObject,'Value'); %gets the selected choice (default is 1)
 dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
-handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the 
+handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the
 %name of the file that contains the water usage data. Use as - load(handles.FULLDATAFILENAME)
 
 guidata(hObject,handles) %saves all the handles
 
 function timeEditBox_Callback(hObject, eventdata, handles)
-%This rounds the input time to the lowest value in handles.time
 sTime = str2double(get(hObject,'String')); %gets the value stored in the box
-syncTime = (sTime-handles.waterLevel(1)); %This usually wont change sTime
-remainderTime = mod(syncTime,handles.dt); %the remainder time
-normalTime = (syncTime - remainderTime)/handles.dt; %This value will be in handles.time always
-
-sTimeIndex = find(handles.time == normalTime); %finds the index of where the specific time is
+sTimeIndex = find(handles.time == sTime); %finds the index of where the specific time is
 sLevel = handles.waterLevel(sTimeIndex); %the water level at the specific time
 sRate = handles.waterRate(sTimeIndex); %the rate at the specific time
 
@@ -122,26 +117,24 @@ function timeEditBox_CreateFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in timeClearButton.
 function timeClearButton_Callback(hObject, eventdata, handles)
-set(handles.timeLevel,'String','') %clears the specific time display 
+set(handles.timeLevel,'String','') %clears the specific time display
 set(handles.timeRate,'String','')
 set(handles.timeEditBox,'String','')
 
 %This function updates the graph
-function graph(hObject, handles)
+function graph(hObject,handles)
 hold off;
-axes(handles.graphOutput) %points to WaterLevel so the plot knows where to go
+axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
 load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
 rtank = 5;%the dimension of the tank
-htank = 20;
-wl(1)= 10;%i set the initial water level for ten because there wasnt anything saying what it would start at 
-vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters 
-vgal(1) = vm3(1)/.0038; % initial volume in gallons 
-dt = time(2)-time(1);
+wl(1)= 10;%i set the initial water level for ten because there wasnt anything saying what it would start at
+vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters
+vgal(1) = vm3(1)/.0038; % initial volume in gallons
+dt = 1;
 pump(1)= 0;
 wlmin = 2; % Assumed, this might have to be changed
 wlmax = 18;
 flowin = 1000;
-%sill need to add in the min and max lewvel 
 for k=2:1:length(time)
     pump(k)= pump(k-1);
     
@@ -152,47 +145,49 @@ for k=2:1:length(time)
     end
     vm3(k)= vgal(k)*.0038; %converts volume to cubic meters
     wl(k)= vm3(k)/(rtank^2*pi); %finds water level using the cubic meter volume
-    if wl(k) < wlmin && pump(k)== 0 %pump controls 
+    if wl(k) < wlmin && pump(k)== 0 %pump controls
         pump(k)=1;
         fprintf('The punp has been turned ON at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
     elseif wl(k)>wlmax && pump(k)== 1
         pump(k)=0;
         fprintf('The punp has been turned OFF at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
     end
-    if wl>20
-        error('water level exceeds the constraints the tank')
-    elseif wl<0
-        error('the water tank is empty')
-    end
 end
-
+GalButton=get(handles.galUnitButton,'Value');
+m3Button=get(handles.m3UnitButton,'Value');
 wlminp(1)=wlmin;
 wlmaxp(1)=wlmax;
 for k=2:1:length(time)
     wlminp(k)=wlmin;
     wlmaxp(k)=wlmax;
 end
-plot(time,wlminp,'--')%puts min and max lines on the graph
-hold on
-plot(time,wlmaxp,'--')
- %need to put in a get from the check baxes for an if sructer
-
- GalButton=get(handles.galUnitButton,'Value');
- m3Button=get(handles.m3UnitButton,'Value');
- if LevelCheckBox==1
-   plot(time,wl)%plots the water level
- end
- if (RateCheckBox==1)&&(GalButton==1)
-plot(time,water_usage)%plots rate in gallons per minute
- elseif (RateCheckBox==1)&&(m3Button==1)
-plot(time,water_usage*.0038)%plots rate in cubic meters per minute 
- end
-hold off
+handles.type
+if handles.type==1
+        plot(time,wlminp,'--')%puts min and max lines on the graph
+        hold on
+        plot(time,wlmaxp,'--')
+        
+        plot(time,wl)%plots the water level
+        hold off
+        fprintf('Graph 1');
+elseif handles.type==2
+        if (GalButton==1)
+            plot(time,vgal)%plots rate in gallons per minute
+        elseif (m3Button==1)
+            plot(time,vm3)%plots rate in cubic meters per minute
+        end
+        fprintf('Graph 2');
+elseif handles.type==3
+        if (GalButton==1)
+            plot(time,water_usage)%plots rate in gallons per minute
+        elseif (m3Button==1)
+            plot(time,water_usage*.0038)%plots rate in cubic meters per minute
+        end
+end
 
 handles.waterLevel = wl; %this is the vector of the water level
 handles.waterRate = water_usage; %this is the vector of the water usage
 handles.time = time; %this is the vector of the times
-handles.dt = dt; %this is the delta t between each data point
 
 guidata(hObject,handles) %updates the handles
 
@@ -221,7 +216,10 @@ function graphMenu_Callback(hObject, eventdata, handles)
 % hObject    handle to graphMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
+type=get(hObject,'Value')
+handles.type=type;
+guidata(hObject,handles)
+graph(hObject, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns graphMenu contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from graphMenu
 
@@ -231,7 +229,10 @@ function graphMenu_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to graphMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
-
+type=get(hObject,'Value');
+handles.type=type;
+guidata(hObject,handles)
+graph(hObject, handles)
 % Hint: popupmenu controls usually have a white background on Windows.
 %       See ISPC and COMPUTER.
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
