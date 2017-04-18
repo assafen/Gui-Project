@@ -22,7 +22,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 17-Apr-2017 22:51:26
+% Last Modified by GUIDE v2.5 18-Apr-2017 11:17:35
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -75,20 +75,26 @@ function varargout = Gui_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 function staticData(handles)
+changeValue = handles.waterLevelUnits(end)-handles.waterLevelUnits(1);
 if get(handles.m3UnitButton,'Value') == 1 %units are metric
     initialString = strcat(num2str(handles.waterLevelUnits(1)),' m');
     finalString = strcat(num2str(handles.waterLevelUnits(end)), ' m');
-    changeString = strcat(num2str(handles.waterLevelUnits(end)-handles.waterLevelUnits(1)), ' m');
+    changeString = strcat(num2str(changeValue), ' m');
 else %units are imperial
     initialString = strcat(num2str(handles.waterLevelUnits(1)),' ft');
     finalString = strcat(num2str(handles.waterLevelUnits(end)), ' ft');
-    changeString = strcat(num2str(handles.waterLevelUnits(end)-handles.waterLevelUnits(1)), ' ft');
+    changeString = strcat(num2str(changeValue), ' ft');
 end
 
 %sets the static data strings
 set(handles.initialLevel,'String',initialString)
 set(handles.finalLevel,'String',finalString)
 set(handles.netChange,'String',changeString)
+if changeValue >= 0
+    set(handles.netChange,'ForegroundColor',[0,.5,0])%green
+else
+    set(handles.netChange,'ForegroundColor',[.5,0,0])%red
+end
 
 %     --- Executes on selection change in dataList.
 function dataList_Callback(hObject, eventdata, handles)
@@ -123,21 +129,27 @@ normalTime = (syncTime - remainderTime)/handles.dt;
 
 sTimeIndex = find(handles.time == normalTime); %finds the index of where the specific time is
 sLevel = handles.waterLevelUnits(sTimeIndex); %the water level at the specific time
+sVolume = handles.waterVolumeUnits(sTimeIndex); %the volume at the specific time
 sRate = handles.waterRateUnits(sTimeIndex); %the rate at the specific time
 sPump = handles.pump(sTimeIndex); %the pump status
 
 if get(handles.m3UnitButton,'Value') == 1 %units are metric
     set(handles.timeLevel,'String',strcat(num2str(sLevel),' m'))
+    set(handles.timeVolume,'String',strcat(num2str(sVolume),' m^3'))
     set(handles.timeRate,'String',strcat(num2str(sRate),' m^3/min'))
+    
 else %units are U.S.
     set(handles.timeLevel,'String',strcat(num2str(sLevel),' ft'))
+    set(handles.timeVolume,'String',strcat(num2str(sVolume),' gal'))
     set(handles.timeRate,'String',strcat(num2str(sRate),' gal/min'))
 end
 
 if sPump == 1
     set(handles.pumpStatus,'String','On')
+    set(handles.pumpStatus,'ForegroundColor',[0,.5,0]) %green
 else
     set(handles.pumpStatus,'String','Off')
+    set(handles.pumpStatus,'ForegroundColor',[.5,0,0]) %red
 end
 
 if isempty(get(hObject, 'String')) == 1 %if there not any data input
@@ -147,6 +159,7 @@ end
 % --- Executes on button press in timeClearButton.
 function timeClearButton_Callback(hObject, eventdata, handles)
 set(handles.timeLevel,'String','') %clears the specific time display
+set(handles.timeVolume,'String','')
 set(handles.timeRate,'String','')
 set(handles.timeEditBox,'String','')
 set(handles.pumpStatus,'String','')
