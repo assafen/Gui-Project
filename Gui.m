@@ -22,7 +22,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 14-Apr-2017 09:42:58
+% Last Modified by GUIDE v2.5 17-Apr-2017 22:51:26
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,10 +60,9 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-%Added Code
-graph(hObject, handles) %calls the graph funtion
-
-
+%Added Code to display graph and clear the specific time section
+graph(handles, eventdata)
+timeClearButton_Callback(hObject, eventdata, handles)
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Gui_OutputFcn(hObject, eventdata, handles)
@@ -75,19 +74,32 @@ function varargout = Gui_OutputFcn(hObject, eventdata, handles)
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 
+function staticData(handles)
+if get(handles.m3UnitButton,'Value') == 1 %units are metric
+    initialString = strcat(num2str(handles.waterLevelUnits(1)),' m');
+    finalString = strcat(num2str(handles.waterLevelUnits(end)), ' m');
+    changeString = strcat(num2str(handles.waterLevelUnits(end)-handles.waterLevelUnits(1)), ' m');
+else %units are imperial
+    initialString = strcat(num2str(handles.waterLevelUnits(1)),' ft');
+    finalString = strcat(num2str(handles.waterLevelUnits(end)), ' ft');
+    changeString = strcat(num2str(handles.waterLevelUnits(end)-handles.waterLevelUnits(1)), ' ft');
+end
+
+%sets the static data strings
+set(handles.initialLevel,'String',initialString)
+set(handles.finalLevel,'String',finalString)
+set(handles.netChange,'String',changeString)
 
 %     --- Executes on selection change in dataList.
 function dataList_Callback(hObject, eventdata, handles)
 listChoice = get(hObject,'Value'); %gets the selected choice
 dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
 handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the
-%   name of the file that contains the water usage data. Use as
-%   load(handles.FULLDATAFILENAME)
-
+%   name of the file that contains the water usage data. 
 fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
 
 guidata(hObject,handles) %saves the handles of FULLDATAFILENAME
-graph(hObject, handles) %calls the graph function to update graph
+graph(handles, eventdata) %calls the graph function to update graph
 
 % --- Executes during object creation, after setting all properties.
 function dataList_CreateFcn(hObject, eventdata, handles)
@@ -103,41 +115,60 @@ handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice); %This is the
 guidata(hObject,handles) %saves all the handles
 
 function timeEditBox_Callback(hObject, eventdata, handles)
+%This allows decimal input and rounds down
 sTime = str2double(get(hObject,'String')); %gets the value stored in the box
-sTimeIndex = find(handles.time == sTime); %finds the index of where the specific time is
-sLevel = handles.waterLevel(sTimeIndex); %the water level at the specific time
-sRate = handles.waterRate(sTimeIndex); %the rate at the specific time
+syncTime = sTime - handles.time(1);
+remainderTime = mod(syncTime,handles.dt);
+normalTime = (syncTime - remainderTime)/handles.dt;
 
-set(handles.timeLevel,'String',sLevel) %sets both output texts to the right values
-set(handles.timeRate,'String',sRate)
+sTimeIndex = find(handles.time == normalTime); %finds the index of where the specific time is
+sLevel = handles.waterLevelUnits(sTimeIndex); %the water level at the specific time
+sRate = handles.waterRateUnits(sTimeIndex); %the rate at the specific time
+sPump = handles.pump(sTimeIndex); %the pump status
 
+if get(handles.m3UnitButton,'Value') == 1 %units are metric
+    set(handles.timeLevel,'String',strcat(num2str(sLevel),' m'))
+    set(handles.timeRate,'String',strcat(num2str(sRate),' m^3/min'))
+else %units are U.S.
+    set(handles.timeLevel,'String',strcat(num2str(sLevel),' ft'))
+    set(handles.timeRate,'String',strcat(num2str(sRate),' gal/min'))
+end
 
-% --- Executes during object creation, after setting all properties.
-function timeEditBox_CreateFcn(hObject, eventdata, handles)
+if sPump == 1
+    set(handles.pumpStatus,'String','On')
+else
+    set(handles.pumpStatus,'String','Off')
+end
+
+if isempty(get(hObject, 'String')) == 1 %if there not any data input
+    timeClearButton_Callback(hObject, eventdata, handles) %clears the units
+end
 
 % --- Executes on button press in timeClearButton.
 function timeClearButton_Callback(hObject, eventdata, handles)
 set(handles.timeLevel,'String','') %clears the specific time display
 set(handles.timeRate,'String','')
 set(handles.timeEditBox,'String','')
+set(handles.pumpStatus,'String','')
 
 %This function updates the graph
-function graph(hObject,handles)
-hold off;
-axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
-load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
+function graph(handles, eventdata)
 rtank = 5;%the dimension of the tank
-wl(1)= 10;%i set the initial water level for ten because there wasnt anything saying what it would start at
-vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters
-vgal(1) = vm3(1)/.0038; % initial volume in gallons
-dt = 1;
-pump(1)= 0;
+wl(1)= 10;%Initial Water Level ??????
 wlmin = 2; % Assumed, this might have to be changed
 wlmax = 18;
-flowin = 1000;
-for k=2:1:length(time)
+flowin = 1000; %pump rate in gal/min
+
+vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters
+vgal(1) = vm3(1)/.0038; % initial volume in gallons
+pump(1)= 0; %pump starts off
+
+axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
+load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
+dt = time(2) - time(1);
+
+for k = 2:dt:length(time)
     pump(k)= pump(k-1);
-    
     if pump(k)==0
         vgal(k)=vgal(k-1)-water_usage(k)*dt; %next volume in gallons if the pump is off
     else
@@ -147,94 +178,94 @@ for k=2:1:length(time)
     wl(k)= vm3(k)/(rtank^2*pi); %finds water level using the cubic meter volume
     if wl(k) < wlmin && pump(k)== 0 %pump controls
         pump(k)=1;
-        fprintf('The punp has been turned ON at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
+        %fprintf('The pump has been turned ON at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
     elseif wl(k)>wlmax && pump(k)== 1
         pump(k)=0;
-        fprintf('The punp has been turned OFF at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
+        %fprintf('The pump has been turned OFF at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
     end
 end
-GalButton=get(handles.galUnitButton,'Value');
-m3Button=get(handles.m3UnitButton,'Value');
-wlminp(1)=wlmin;
-wlmaxp(1)=wlmax;
-for k=2:1:length(time)
-    wlminp(k)=wlmin;
-    wlmaxp(k)=wlmax;
-end
-handles.type
-if handles.type==1
-        plot(time,wlminp,'--')%puts min and max lines on the graph
-        hold on
-        plot(time,wlmaxp,'--')
-        
-        plot(time,wl)%plots the water level
-        hold off
-        fprintf('Graph 1');
-elseif handles.type==2
-        if (GalButton==1)
-            plot(time,vgal)%plots rate in gallons per minute
-        elseif (m3Button==1)
-            plot(time,vm3)%plots rate in cubic meters per minute
-        end
-        fprintf('Graph 2');
-elseif handles.type==3
-        if (GalButton==1)
-            plot(time,water_usage)%plots rate in gallons per minute
-        elseif (m3Button==1)
-            plot(time,water_usage*.0038)%plots rate in cubic meters per minute
-        end
+
+%Data is altered based on Units
+if get(handles.m3UnitButton,'Value') == 1 %Units are Metric
+    waterLevelUnits = wl; %meters
+    waterVolumeUnits = vm3; %meters
+    waterRateUnits = water_usage*.00378541; %cubic meters per minute
+    
+    for k = 1:length(time)
+        maxLevelPump(k) = wlmax; %vector of the pump turn-off level
+        minLevelPump(k) = wlmin; %vector of the pump turn-on level
+    end
+    levelVAxis = 'Water Level (m)'; %vertical axis title for water level
+    volumeVAxis = 'Water Volume (m^3)'; %vertical axis title for water level
+    rateVAxis = 'Water Rate (m^3/min)'; %vertical axis title for water rate
+    
+else %Units are U.S.
+    waterLevelUnits = wl*3.28084; %feet
+    waterVolumeUnits = vgal; %gal
+    waterRateUnits = water_usage; %gal per minute
+    
+    for k = 1:length(time)
+        maxLevelPump(k) = wlmax*3.28084; %vector of the pump turn-off level
+        minLevelPump(k) = wlmin*3.28084; %vector of the pump turn-on level
+    end
+    levelVAxis = 'Water Level (ft)'; %vertical axis title for water level
+    volumeVAxis = 'Water Volume (gal)'; %vertical axis title for water level
+    rateVAxis = 'Water Rate (gal/min)'; %vertical axis title for water rate
 end
 
-handles.waterLevel = wl; %this is the vector of the water level
-handles.waterRate = water_usage; %this is the vector of the water usage
-handles.time = time; %this is the vector of the times
+%Graphing based on drop down menu
+if handles.type==1 %Water Level
+    plot(time,waterLevelUnits) %plots water level in correct units
+    xlabel('Time (minutes)')
+    ylabel(levelVAxis) %gives unit based axis label
+    title('Water Level in Tank')
+    
+    hold on %Adds the min/max lines
+    plot(time,maxLevelPump,'--') %puts min and max lines on the graph
+    plot(time,minLevelPump,'--') %Units are considered
+    legend('Water Level', 'Max Level','Minimum Level','location','best')
+    hold off
+    
+elseif handles.type==2 %Water Volume
+    plot(time,waterVolumeUnits)%plots volume in correct units
+    xlabel('Time (minutes)')
+    ylabel(volumeVAxis) %y axis title with correct units
+    title('Water Volume in Tank')
+    
+elseif handles.type==3 %Water Rate
+    plot(time,waterRateUnits)%plots water rate in correct units
+    xlabel('Time (minutes)')
+    ylabel(rateVAxis) %y axis title with correct units
+    title('Water Usage Rate')
+end
 
-guidata(hObject,handles) %updates the handles
+%Creates and saves handles
+handles.waterLevelUnits = waterLevelUnits; %Water Level vector in correct units
+handles.waterVolumeUnits = waterVolumeUnits; %Water Volume vector in correct units
+handles.waterRateUnits = waterRateUnits; %Water Rate vector in correct units
+handles.pump = pump; %Vector of the pump status
+handles.time = time; %Time vector from data
+handles.dt = dt; %dt of the time vector
 
-
+guidata(handles.graphMenu, handles) %updates the handles
+staticData(handles) %updates Static Data
+timeEditBox_Callback(handles.timeEditBox, eventdata, handles) %Updates units
 
 % --- Executes on button press in galUnitButton.
 function galUnitButton_Callback(hObject, eventdata, handles)
-% hObject    handle to galUnitButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-graph(hObject, handles)
-% Hint: get(hObject,'Value') returns toggle state of galUnitButton
-
+graph(handles, eventdata)
 
 % --- Executes on button press in m3UnitButton.
 function m3UnitButton_Callback(hObject, eventdata, handles)
-% hObject    handle to m3UnitButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-graph(hObject, handles)
-% Hint: get(hObject,'Value') returns toggle state of m3UnitButton
-
+graph(handles, eventdata)
 
 % --- Executes on selection change in graphMenu.
 function graphMenu_Callback(hObject, eventdata, handles)
-% hObject    handle to graphMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-type=get(hObject,'Value')
-handles.type=type;
-guidata(hObject,handles)
-graph(hObject, handles)
-% Hints: contents = cellstr(get(hObject,'String')) returns graphMenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from graphMenu
-
+handles.type = get(hObject,'Value');
+guidata(hObject, handles)
+graph(handles, eventdata)
 
 % --- Executes during object creation, after setting all properties.
 function graphMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to graphMenu (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-type=get(hObject,'Value');
-handles.type=type;
+handles.type = get(hObject,'Value');
 guidata(hObject,handles)
-graph(hObject, handles)
-% Hint: popupmenu controls usually have a white background on Windows.
-%       See ISPC and COMPUTER.
-if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
-    set(hObject,'BackgroundColor','white');
-end
