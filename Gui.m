@@ -22,7 +22,7 @@ function varargout = Gui(varargin)
 
 % Edit the above text to modify the response to help Gui
 
-% Last Modified by GUIDE v2.5 18-Apr-2017 11:17:35
+% Last Modified by GUIDE v2.5 18-Apr-2017 13:05:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -60,9 +60,9 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
-%Added Code to display graph and clear the specific time section
+%Added Code to display graph
 graph(handles, eventdata)
-timeClearButton_Callback(hObject, eventdata, handles)
+set(handles.inRange,'String','') %stops displaying out of range on opening
 
 % --- Outputs from this function are returned to the command line.
 function varargout = Gui_OutputFcn(hObject, eventdata, handles)
@@ -101,7 +101,7 @@ function dataList_Callback(hObject, eventdata, handles)
 listChoice = get(hObject,'Value'); %gets the selected choice
 dataChoice = char(handles.NAMES(listChoice)); %dataChoice is the name of the selected file
 handles.FULLDATAFILENAME = fullfile('DataFolder',dataChoice);  %This is the
-%   name of the file that contains the water usage data. 
+%   name of the file that contains the water usage data.
 fprintf('Data Selection Changed to %s\n', handles.FULLDATAFILENAME);
 
 guidata(hObject,handles) %saves the handles of FULLDATAFILENAME
@@ -122,10 +122,9 @@ guidata(hObject,handles) %saves all the handles
 
 function timeEditBox_Callback(hObject, eventdata, handles)
 %This allows decimal input and rounds down
-sTime = str2double(get(hObject,'String')); %gets the value stored in the box
-syncTime = sTime - handles.time(1);
-remainderTime = mod(syncTime,handles.dt);
-normalTime = (syncTime - remainderTime)/handles.dt;
+sTime = str2double(get(hObject,'String')); %gets the value stored in the box;
+remainderTime = mod(sTime,handles.dt);
+normalTime = (sTime - remainderTime);
 
 sTimeIndex = find(handles.time == normalTime); %finds the index of where the specific time is
 sLevel = handles.waterLevelUnits(sTimeIndex); %the water level at the specific time
@@ -133,6 +132,12 @@ sVolume = handles.waterVolumeUnits(sTimeIndex); %the volume at the specific time
 sRate = handles.waterRateUnits(sTimeIndex); %the rate at the specific time
 sPump = handles.pump(sTimeIndex); %the pump status
 
+if isempty(sTimeIndex)
+    set(handles.inRange,'String','Out of Range')
+else
+    set(handles.inRange,'String','')
+end
+    
 if get(handles.m3UnitButton,'Value') == 1 %units are metric
     set(handles.timeLevel,'String',strcat(num2str(sLevel),' m'))
     set(handles.timeVolume,'String',strcat(num2str(sVolume),' m^3'))
@@ -152,9 +157,14 @@ else
     set(handles.pumpStatus,'ForegroundColor',[.5,0,0]) %red
 end
 
-if isempty(get(hObject, 'String')) == 1 %if there not any data input
-    timeClearButton_Callback(hObject, eventdata, handles) %clears the units
+if isempty(sTimeIndex) %if there not any valid data input
+    timeClearButton_Callback(handles.timeClearButton, eventdata, handles) %clears the units
+    set(handles.inRange,'String','Out of Range')
 end
+
+handles.sLevel = sLevel;
+guidata(handles.timeEditBox, handles) %updates the handles
+drawTank(handles)
 
 % --- Executes on button press in timeClearButton.
 function timeClearButton_Callback(hObject, eventdata, handles)
@@ -163,16 +173,21 @@ set(handles.timeVolume,'String','')
 set(handles.timeRate,'String','')
 set(handles.timeEditBox,'String','')
 set(handles.pumpStatus,'String','')
+set(handles.inRange,'String','')
+handles.sLevel = '';
+drawTank(handles) %updates the tank to be blank
 
 %This function updates the graph
 function graph(handles, eventdata)
-rtank = 5;%the dimension of the tank
-wl(1)= 10;%Initial Water Level ??????
+handles.rTank = 5; %the dimension of the tank
+handles.hTank = 20;
+
+wl(1)= 10; %Initial Water Level ??????
 wlmin = 2; % Assumed, this might have to be changed
 wlmax = 18;
 flowin = 1000; %pump rate in gal/min
 
-vm3(1)= rtank^2*pi*wl(1);% inital volumes in cubic meters
+vm3(1)= handles.rTank^2*pi*wl(1);% inital volumes in cubic meters
 vgal(1) = vm3(1)/.0038; % initial volume in gallons
 pump(1)= 0; %pump starts off
 
@@ -188,7 +203,7 @@ for k = 2:dt:length(time)
         vgal(k)=vgal(k-1)+(flowin-water_usage(k))*dt; %next volume in gallons if the pump is on
     end
     vm3(k)= vgal(k)*.0038; %converts volume to cubic meters
-    wl(k)= vm3(k)/(rtank^2*pi); %finds water level using the cubic meter volume
+    wl(k)= vm3(k)/(handles.rTank^2*pi); %finds water level using the cubic meter volume
     if wl(k) < wlmin && pump(k)== 0 %pump controls
         pump(k)=1;
         %fprintf('The pump has been turned ON at %i. \nThe water level is %0.4f.\n',time(k),wl(k))
@@ -282,3 +297,52 @@ graph(handles, eventdata)
 function graphMenu_CreateFcn(hObject, eventdata, handles)
 handles.type = get(hObject,'Value');
 guidata(hObject,handles)
+
+function drawTank(handles)
+currentLevel = handles.sLevel; %current water level with correct units
+axes(handles.tankPicture) %points to the correct axes
+
+if get(handles.m3UnitButton,'Value') == 1 %meters
+    maxLevel = handles.hTank; %tank dimensions
+    radius = handles.rTank;
+    heightString = strcat(num2str(maxLevel), ' m');
+    radiusString = strcat(num2str(radius), ' m');
+else %feet
+    maxLevel = handles.hTank*3.28084; %tank dimensions
+    radius = handles.rTank*3.28084;
+    heightString = strcat(num2str(maxLevel), ' ft');
+    radiusString = strcat(num2str(radius), ' ft');
+end
+
+R = [radius radius]; %radius of the bottom and top of the cylinder
+N = 15; %number of points on the cylinder circumference
+
+%Draws the tank
+[X,Y,Z] = cylinder(R,N);
+Z(2,:) = maxLevel;
+tankCylinder = surf(X,Y,Z);
+set(tankCylinder,'FaceAlpha',0.1,'EdgeColor',[0 0 0],'EdgeAlpha',0.4, 'FaceColor',[0 0 0])
+
+if isempty(currentLevel) == 0 %only executes if there is data to act on
+    %Draws the water    
+    hold on
+    [X2,Y2,Z2] = cylinder(R,N); %creates a cyclinder with a radius = radius
+    Z2(end,:) = currentLevel; %sets the cylinders height to the water level
+    waterCylinder = surf(X2,Y2,Z2);
+    set(waterCylinder,'EdgeColor',[0 0 0],'EdgeAlpha',0, 'FaceColor',[0 0 1])
+    patch(X2(end,:), Y2(end,:), Z2(end,:),[0 0 1]); %colors the top face
+    hold off
+    
+    %Title when data is present
+    text(0,0,1.3*maxLevel,['Tank Status at ' get(handles.timeEditBox,...
+        'String')  ' minutes'],'HorizontalAlignment','center')
+else
+    %Title when data is not present
+    text(0,0,1.3*maxLevel,'Tank Status','HorizontalAlignment','center')
+end
+%Lists tank dimensions
+text(-2*radius,0,maxLevel/2,['Tank Height: ' heightString],'HorizontalAlignment','right')
+text(-2*radius,0,maxLevel/4,['Tank Radius: ' radiusString],'HorizontalAlignment','right')
+
+axis equal
+axis off
