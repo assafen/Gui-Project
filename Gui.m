@@ -182,6 +182,10 @@ function graph(handles, eventdata)
 handles.rTank = 5; %the dimensions of the tank
 handles.hTank = 20;
 
+axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
+load(handles.FULLDATAFILENAME,'water_usage','time') %loads the currently selected data file into memory
+dt = time(2) - time(1);
+
 wl(1)= 10; %Initial Water Level in meters
 wlmin = 2; % Pump water level trigger points in meters
 wlmax = 18;
@@ -191,9 +195,7 @@ vm3(1)= handles.rTank^2*pi*wl(1);% inital volumes in cubic meters
 vgal(1) = vm3(1)/.0038; % initial volume in gallons
 pump(1)= 0; %pump starts off
 
-axes(handles.graphOutput) %points to graphOutput so the plot knows where to go
-load(handles.FULLDATAFILENAME) %loads the currently selected data file into memory
-dt = time(2) - time(1);
+
 
 for k = 2:dt:length(time)
     pump(k)= pump(k-1);
@@ -336,7 +338,7 @@ if isempty(currentLevel) == 0 %only executes if there is data to act on
     %Title when data is present
     text(0,0,1.3*maxLevel,['Tank Status at ' get(handles.timeEditBox,...
         'String')  ' minutes'],'HorizontalAlignment','center')
-    percentFull = round(handles.sLevel/handles.hTank*100,1);
+    percentFull = round(handles.sLevel/maxLevel*100,1);
     text(-1.4*radius,0,.9*maxLevel, ['Tank is ' num2str(percentFull) ' % full'],'HorizontalAlignment','right')
 else
     %Title when data is not present
