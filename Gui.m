@@ -179,11 +179,11 @@ drawTank(handles) %updates the tank to be blank
 
 %This function updates the graph
 function graph(handles, eventdata)
-handles.rTank = 5; %the dimension of the tank
+handles.rTank = 5; %the dimensions of the tank
 handles.hTank = 20;
 
-wl(1)= 10; %Initial Water Level ??????
-wlmin = 2; % Assumed, this might have to be changed
+wl(1)= 10; %Initial Water Level in meters
+wlmin = 2; % Pump water level trigger points in meters
 wlmax = 18;
 flowin = 1000; %pump rate in gal/min
 
@@ -336,6 +336,8 @@ if isempty(currentLevel) == 0 %only executes if there is data to act on
     %Title when data is present
     text(0,0,1.3*maxLevel,['Tank Status at ' get(handles.timeEditBox,...
         'String')  ' minutes'],'HorizontalAlignment','center')
+    percentFull = round(handles.sLevel/handles.hTank*100,1);
+    text(-1.4*radius,0,.9*maxLevel, ['Tank is ' num2str(percentFull) ' % full'],'HorizontalAlignment','right')
 else
     %Title when data is not present
     text(0,0,1.3*maxLevel,'Tank Status','HorizontalAlignment','center')
